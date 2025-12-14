@@ -1,0 +1,320 @@
+[
+    {
+        "id": "a0cb9b71d871da2b",
+        "type": "tab",
+        "label": "rtos-sabu",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "3db9b070e0eda29e",
+        "type": "mqtt-broker",
+        "name": "mqtt-rtos-sabu",
+        "broker": "127.0.0.1",
+        "port": 1883,
+        "clientid": "nodered-rtos-sabu",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "3",
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "3172c25779a8a212",
+        "type": "serial-port",
+        "name": "pzem",
+        "serialport": "/dev/ttyACM0",
+        "serialbaud": "115200",
+        "databits": 8,
+        "parity": "none",
+        "stopbits": 1,
+        "waitfor": "",
+        "dtr": "none",
+        "rts": "none",
+        "cts": "none",
+        "dsr": "none",
+        "newline": "\\n",
+        "bin": "false",
+        "out": "char",
+        "addchar": "",
+        "responsetimeout": 10000
+    },
+    {
+        "id": "5f963a74a5dd6a03",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-node-serialport": "2.0.3"
+        }
+    },
+    {
+        "id": "8634f36424707fe3",
+        "type": "mqtt in",
+        "z": "a0cb9b71d871da2b",
+        "name": "Sensor Data PZEM(s)",
+        "topic": "pzem/data",
+        "qos": "0",
+        "datatype": "utf8",
+        "broker": "3db9b070e0eda29e",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 460,
+        "y": 400,
+        "wires": [
+            [
+                "3d749345370f1d7c",
+                "4c5c15641fad4edf"
+            ]
+        ]
+    },
+    {
+        "id": "4c5c15641fad4edf",
+        "type": "http request",
+        "z": "a0cb9b71d871da2b",
+        "name": "FLASK+Pytorch Anomaly Detection",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://localhost:5000/inference",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [
+            {
+                "keyType": "Content-Type",
+                "keyValue": "",
+                "valueType": "application/json",
+                "valueValue": ""
+            }
+        ],
+        "x": 800,
+        "y": 400,
+        "wires": [
+            [
+                "b10410ef30f1e85c",
+                "3e812b9c50d66a34"
+            ]
+        ]
+    },
+    {
+        "id": "b10410ef30f1e85c",
+        "type": "debug",
+        "z": "a0cb9b71d871da2b",
+        "name": "debug 2",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1080,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "79151379a6f6ede1",
+        "type": "function",
+        "z": "a0cb9b71d871da2b",
+        "name": "anomaly threshold",
+        "func": "const threshold = 0.8\nconst relay = msg.payload.anomaly_prediction\n\nreturn JSON.parse(`{\"payload\": ${relay ? 2 : 1}}`);",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1110,
+        "y": 480,
+        "wires": [
+            [
+                "e04da6edeb77adf2"
+            ]
+        ]
+    },
+    {
+        "id": "9781fca30dd72d0e",
+        "type": "debug",
+        "z": "a0cb9b71d871da2b",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1340,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "e04da6edeb77adf2",
+        "type": "serial out",
+        "z": "a0cb9b71d871da2b",
+        "name": "Relay",
+        "serial": "3172c25779a8a212",
+        "x": 1330,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "3d749345370f1d7c",
+        "type": "debug",
+        "z": "a0cb9b71d871da2b",
+        "name": "debug 4",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 720,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "03a802768678967d",
+        "type": "debug",
+        "z": "a0cb9b71d871da2b",
+        "name": "debug 5",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 720,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "5bb4cfebef501419",
+        "type": "serial in",
+        "z": "a0cb9b71d871da2b",
+        "name": "PZEM Serial",
+        "serial": "3172c25779a8a212",
+        "x": 490,
+        "y": 620,
+        "wires": [
+            [
+                "03a802768678967d"
+            ]
+        ]
+    },
+    {
+        "id": "fa07b5d548bd80d1",
+        "type": "mqtt out",
+        "z": "a0cb9b71d871da2b",
+        "name": "Relay",
+        "topic": "relay/control",
+        "qos": "0",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "3db9b070e0eda29e",
+        "x": 1330,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "66240acc79a5fd40",
+        "type": "inject",
+        "z": "a0cb9b71d871da2b",
+        "name": "inject",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{   \"anomaly_prediction\": 1,   \"current\": 0.735,   \"energy\": 2.361,   \"frequency\": 50.0,   \"pf\": 0.86,   \"power\": 147.2,   \"voltage\": 232.6 }",
+        "payloadType": "json",
+        "x": 510,
+        "y": 480,
+        "wires": [
+            [
+                "4c5c15641fad4edf"
+            ]
+        ]
+    },
+    {
+        "id": "9252bcec4f48e127",
+        "type": "function",
+        "z": "a0cb9b71d871da2b",
+        "name": "reverse logic",
+        "func": "const relay = msg.payload.anomaly_prediction == 1 ? 0 : 1\nreturn JSON.parse(`{\"payload\": ${relay}}`);",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1110,
+        "y": 280,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "3e812b9c50d66a34",
+        "type": "function",
+        "z": "a0cb9b71d871da2b",
+        "name": "reverse logic",
+        "func": "const relay = msg.payload.anomaly_prediction\nreturn JSON.parse(`{\"payload\": ${relay}}`);",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1110,
+        "y": 400,
+        "wires": [
+            [
+                "fa07b5d548bd80d1",
+                "9781fca30dd72d0e"
+            ]
+        ]
+    }
+]

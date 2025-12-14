@@ -3,5 +3,11 @@
 *.pyo
 *.pyd
 __pycache__/
+data/
+
+*.csv
+*.pth
+*.npy
+*.pkl
 
 .vscode/

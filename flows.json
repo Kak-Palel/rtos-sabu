@@ -8,74 +8,82 @@
         "env": []
     },
     {
+        "id": "3db9b070e0eda29e",
+        "type": "mqtt-broker",
+        "name": "mqtt-rtos-sabu",
+        "broker": "127.0.0.1",
+        "port": 1883,
+        "clientid": "nodered-rtos-sabu",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "3",
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "3172c25779a8a212",
+        "type": "serial-port",
+        "name": "pzem",
+        "serialport": "/dev/ttyACM0",
+        "serialbaud": "115200",
+        "databits": 8,
+        "parity": "none",
+        "stopbits": 1,
+        "waitfor": "",
+        "dtr": "none",
+        "rts": "none",
+        "cts": "none",
+        "dsr": "none",
+        "newline": "\\n",
+        "bin": "false",
+        "out": "char",
+        "addchar": "",
+        "responsetimeout": 10000
+    },
+    {
+        "id": "5f963a74a5dd6a03",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-node-serialport": "2.0.3"
+        }
+    },
+    {
         "id": "8634f36424707fe3",
         "type": "mqtt in",
         "z": "a0cb9b71d871da2b",
         "name": "Sensor Data PZEM(s)",
-        "topic": "pzem_data",
+        "topic": "pzem/data",
         "qos": "0",
-        "datatype": "json",
+        "datatype": "utf8",
         "broker": "3db9b070e0eda29e",
         "nl": false,
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 220,
-        "y": 300,
-        "wires": [
-            [
-                "e4853e387a454a3c"
-            ]
-        ]
-    },
-    {
-        "id": "5bb4cfebef501419",
-        "type": "serial in",
-        "z": "a0cb9b71d871da2b",
-        "name": "PZEM Serial",
-        "serial": "3172c25779a8a212",
-        "x": 250,
+        "x": 460,
         "y": 400,
         "wires": [
             [
-                "69afd4107f716762"
-            ]
-        ]
-    },
-    {
-        "id": "d5d6e75d9b74e35a",
-        "type": "debug",
-        "z": "a0cb9b71d871da2b",
-        "name": "debug 1",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 720,
-        "y": 500,
-        "wires": []
-    },
-    {
-        "id": "69afd4107f716762",
-        "type": "function",
-        "z": "a0cb9b71d871da2b",
-        "name": "remove [DATA] flag",
-        "func": "msg.payload = JSON.parse(msg.payload.replace(\"[DATA] \", \"\"));\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 490,
-        "y": 400,
-        "wires": [
-            [
-                "d5d6e75d9b74e35a",
+                "3d749345370f1d7c",
                 "4c5c15641fad4edf"
             ]
         ]
@@ -108,39 +116,9 @@
         "wires": [
             [
                 "b10410ef30f1e85c",
-                "79151379a6f6ede1"
+                "9252bcec4f48e127"
             ]
         ]
-    },
-    {
-        "id": "e4853e387a454a3c",
-        "type": "function",
-        "z": "a0cb9b71d871da2b",
-        "name": "remove [DATA] flag",
-        "func": "\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 490,
-        "y": 300,
-        "wires": [
-            [
-                "4c5c15641fad4edf"
-            ]
-        ]
-    },
-    {
-        "id": "b3bb2c8b85b3bd4a",
-        "type": "comment",
-        "z": "a0cb9b71d871da2b",
-        "name": "Input lewat MQTT optional",
-        "info": "Input lewat MQTT optional",
-        "x": 430,
-        "y": 240,
-        "wires": []
     },
     {
         "id": "b10410ef30f1e85c",
@@ -156,7 +134,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 1080,
-        "y": 500,
+        "y": 560,
         "wires": []
     },
     {
@@ -164,7 +142,7 @@
         "type": "function",
         "z": "a0cb9b71d871da2b",
         "name": "anomaly threshold",
-        "func": "const threshold = 0.8\nconst relay = msg.payload.prediction_conf.normal > threshold ? true : false\n\nreturn JSON.parse(`{\"payload\": ${relay ? 1 : 2}}`);",
+        "func": "const threshold = 0.8\nconst relay = msg.payload.anomaly_prediction\n\nreturn JSON.parse(`{\"payload\": ${relay ? 2 : 1}}`);",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -172,12 +150,10 @@
         "finalize": "",
         "libs": [],
         "x": 1110,
-        "y": 300,
+        "y": 480,
         "wires": [
             [
-                "9781fca30dd72d0e",
-                "e04da6edeb77adf2",
-                "9e3d1de4fd34ba0c"
+                "e04da6edeb77adf2"
             ]
         ]
     },
@@ -186,7 +162,7 @@
         "type": "debug",
         "z": "a0cb9b71d871da2b",
         "name": "debug 3",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -194,7 +170,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 1340,
-        "y": 200,
+        "y": 280,
         "wires": []
     },
     {
@@ -204,83 +180,141 @@
         "name": "Relay",
         "serial": "3172c25779a8a212",
         "x": 1330,
-        "y": 400,
+        "y": 480,
         "wires": []
     },
     {
-        "id": "9e3d1de4fd34ba0c",
+        "id": "3d749345370f1d7c",
+        "type": "debug",
+        "z": "a0cb9b71d871da2b",
+        "name": "debug 4",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 720,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "03a802768678967d",
+        "type": "debug",
+        "z": "a0cb9b71d871da2b",
+        "name": "debug 5",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 720,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "5bb4cfebef501419",
+        "type": "serial in",
+        "z": "a0cb9b71d871da2b",
+        "name": "PZEM Serial",
+        "serial": "3172c25779a8a212",
+        "x": 490,
+        "y": 620,
+        "wires": [
+            [
+                "03a802768678967d"
+            ]
+        ]
+    },
+    {
+        "id": "fa07b5d548bd80d1",
         "type": "mqtt out",
         "z": "a0cb9b71d871da2b",
-        "name": "",
-        "topic": "",
-        "qos": "",
+        "name": "Relay",
+        "topic": "relay/control",
+        "qos": "0",
         "retain": "",
         "respTopic": "",
         "contentType": "",
         "userProps": "",
         "correl": "",
         "expiry": "",
+        "broker": "3db9b070e0eda29e",
         "x": 1330,
-        "y": 300,
+        "y": 400,
         "wires": []
     },
     {
-        "id": "3db9b070e0eda29e",
-        "type": "mqtt-broker",
-        "name": "mqtt-rtos-sabu",
-        "broker": "localhost",
-        "port": 1883,
-        "clientid": "nodered-rtos-sabu",
-        "autoConnect": true,
-        "usetls": false,
-        "protocolVersion": 4,
-        "keepalive": 60,
-        "cleansession": true,
-        "autoUnsubscribe": true,
-        "birthTopic": "",
-        "birthQos": "0",
-        "birthRetain": "false",
-        "birthPayload": "",
-        "birthMsg": {},
-        "closeTopic": "",
-        "closeQos": "0",
-        "closeRetain": "false",
-        "closePayload": "",
-        "closeMsg": {},
-        "willTopic": "",
-        "willQos": "0",
-        "willRetain": "false",
-        "willPayload": "",
-        "willMsg": {},
-        "userProps": "",
-        "sessionExpiry": ""
+        "id": "66240acc79a5fd40",
+        "type": "inject",
+        "z": "a0cb9b71d871da2b",
+        "name": "inject",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{   \"anomaly_prediction\": 1,   \"current\": 0.735,   \"energy\": 2.361,   \"frequency\": 50.0,   \"pf\": 0.86,   \"power\": 147.2,   \"voltage\": 232.6 }",
+        "payloadType": "json",
+        "x": 510,
+        "y": 480,
+        "wires": [
+            [
+                "4c5c15641fad4edf"
+            ]
+        ]
     },
     {
-        "id": "3172c25779a8a212",
-        "type": "serial-port",
-        "name": "pzem",
-        "serialport": "/dev/ttyUSB0",
-        "serialbaud": "115200",
-        "databits": 8,
-        "parity": "none",
-        "stopbits": 1,
-        "waitfor": "",
-        "dtr": "none",
-        "rts": "none",
-        "cts": "none",
-        "dsr": "none",
-        "newline": "\\n",
-        "bin": "false",
-        "out": "char",
-        "addchar": "",
-        "responsetimeout": 10000
+        "id": "9252bcec4f48e127",
+        "type": "function",
+        "z": "a0cb9b71d871da2b",
+        "name": "reverse logic",
+        "func": "const relay = msg.payload.anomaly_prediction == 1 ? 1 : 0\nreturn JSON.parse(`{\"payload\": ${relay}}`);",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1090,
+        "y": 400,
+        "wires": [
+            [
+                "fa07b5d548bd80d1",
+                "9781fca30dd72d0e"
+            ]
+        ]
     },
     {
-        "id": "5f963a74a5dd6a03",
-        "type": "global-config",
-        "env": [],
-        "modules": {
-            "node-red-node-serialport": "2.0.3"
-        }
+        "id": "3e812b9c50d66a34",
+        "type": "function",
+        "z": "a0cb9b71d871da2b",
+        "name": "no reverse logic",
+        "func": "const relay = msg.payload.anomaly_prediction\nreturn JSON.parse(`{\"payload\": ${relay}}`);",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1100,
+        "y": 320,
+        "wires": [
+            []
+        ]
     }
 ]
