@@ -4,10 +4,17 @@
 *.pyd
 __pycache__/
 data/
+bilstm_autoencoder_anomaly_detection/
+lightning_logs/
+wandb/
+weights/
+*.backup
 
 *.csv
 *.pth
 *.npy
 *.pkl
+*.png
+*.ckpt
 
 .vscode/

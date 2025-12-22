@@ -330,7 +330,6 @@ def plot_feature_reconstruction_errors(originals, reconstructed, feature_names,
     print(f"Feature reconstruction errors plot saved as '{save_path}'")
     plt.show()
 
-
 def plot_anomaly_visualization(originals, reconstructed, predictions, errors, 
                                feature_names, threshold, num_normal=3, num_anomaly=3,
                                save_path='anomaly_visualization.png'):
@@ -429,7 +428,7 @@ def plot_anomaly_visualization(originals, reconstructed, predictions, errors,
     plt.show()
 
 def main():
-    df = pd.read_csv('komputer_tf.csv')
+    df = pd.read_csv('laptop_rian_palel.csv')
     
     features = ['voltage', 'current', 'power', 'energy', 'frequency', 'power_factor']
     data = df[features].values
@@ -438,7 +437,7 @@ def main():
     data_normalized = scaler.fit_transform(data)
     
     # Split data: 70% train, 15% validation, 15% test
-    train_size = int(0.7 * len(data_normalized))
+    train_size = int(0.8 * len(data_normalized))
     val_size = int(0.15 * len(data_normalized))
     
     train_data = data_normalized[:train_size]
@@ -469,8 +468,10 @@ def main():
     print("Training model...")
     train_losses, val_losses = train_model(
         model, train_loader, val_loader, 
-        epochs=50, lr=0.0001, device=device
+        epochs=300, lr=0.0001, device=device
     )
+
+    # exit()
     
     # Plot training curves
     plt.figure(figsize=(12, 4))
@@ -564,12 +565,12 @@ def main():
     )
     
     # Save the model
-    torch.save(model.state_dict(), 'bilstm_autoencoder.pth')
-    print("\nModel saved as 'bilstm_autoencoder.pth'")
+    torch.save(model.state_dict(), 'bilstm_autoencoder_last.pth')
+    print("\nModel saved as 'bilstm_autoencoder_last.pth'")
     
     # Save threshold for future use
-    np.save('threshold.npy', threshold)
-    print("Threshold saved as 'threshold.npy'")
+    np.save('threshold_last.npy', threshold)
+    print("Threshold saved as 'threshold_last.npy'")
 
 
 if __name__ == '__main__':

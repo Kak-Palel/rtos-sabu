@@ -4,9 +4,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from anomaly_detector import RealtimeAnomalyDetector
-from realtine_plotter import RealtimePlotter
+from realtime_plotter import RealtimePlotter
     
-CSV_PATH = 'komputer_tf.csv'
+CSV_PATH = 'sensor_log.csv'
 MODEL_PATH = 'bilstm_autoencoder.pth'
 THRESHOLD_PATH = 'threshold.npy'
 SCALER_PATH = 'scaler.pkl'
@@ -113,6 +113,7 @@ def simulate_realtime_detection(csv_path, model_path, threshold_path, scaler_pat
 if __name__ == '__main__':
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    
     print(f'Using device: {device}\n')
     
     # Run simulation

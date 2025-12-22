@@ -1,5 +1,5 @@
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
-from prometheus_client import make_wsgi_app, Summary, Gauge
+from prometheus_client import make_wsgi_app, Enum, Gauge
 from anomaly_detector import RealtimeAnomalyDetector
 from flask import Flask, jsonify, request
 import torch
@@ -13,6 +13,8 @@ DATA_RATE = 1 #hz
 SAMPLE_EVERY = 1 #seconds
 ENABLE_DATA_SAVING = False
 data_received = 0
+anomaly_count = 0
+ANOMALY_COUNT_TO_TRIGGER_ALERT = 5
 
 MODEL_PATH = 'bilstm_autoencoder.pth'
 THRESHOLD_PATH = 'threshold.npy'
@@ -20,7 +22,7 @@ SCALER_PATH = 'scaler.pkl'
 
 FEATURE_NAMES = ['voltage', 'current', 'power', 'energy', 'frequency', 'power_factor']
 LOOKBACK = 10
-ANOMALY_THRESHOLD = 0.7 # None to use the mean based trained threshold
+ANOMALY_THRESHOLD = 2.5 # None to use the mean based trained threshold
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 anomaly_detector = RealtimeAnomalyDetector(
@@ -35,7 +37,7 @@ anomaly_detector = RealtimeAnomalyDetector(
 
 if ENABLE_DATA_SAVING:
     from data_saver import DataSaver
-    data_saver = DataSaver("komputer_tf.csv")
+    data_saver = DataSaver("laptop_rian_palel.csv")
 else:
     data_saver = None
 
@@ -46,6 +48,7 @@ power = Gauge('power', 'Power gauge example')
 energy = Gauge('energy', 'Energy gauge example')
 frequency = Gauge('frequency', 'Frequency gauge example')
 power_factor = Gauge('power_factor', 'Power Factor gauge example')
+anomaly_status = Enum('is_anomaly', 'Anomaly status', states=['normal', 'anomaly'])
 
 @app.route('/')
 def home():
@@ -102,18 +105,29 @@ def inference():
         
     timestamp = time.time()
     if is_anomaly is not None:  # Only update after we have enough points
+        global anomaly_count
+        if is_anomaly:
+            anomaly_count += 1
+        else:
+            anomaly_count = 0
         anomaly_detector.update_history(timestamp, error, is_anomaly, original, reconstructed)
         
         # Print status
         status = "🔴 ANOMALY" if is_anomaly else "🟢 Normal "
         print(f"[{timestamp:4f}] {status} | Error: {error:.6f} | Threshold: {anomaly_detector.threshold:.6f}")
         response = request_data
-        response["anomaly_prediction"] = 1 if is_anomaly else 0
+        if anomaly_count >= ANOMALY_COUNT_TO_TRIGGER_ALERT:
+            response["anomaly_prediction"] = 1 if is_anomaly else 0
+            anomaly_status.state('anomaly' if is_anomaly else 'normal')
+        else:
+            response["anomaly_prediction"] = 0
+            anomaly_status.state('normal')
         return jsonify(response)
     else:
         print(f"[{timestamp:4f}] Buffering... ({len(anomaly_detector.data_buffer)}/{anomaly_detector.lookback})")
         response = request_data
         response["anomaly_prediction"] = 0
+        anomaly_status.state('normal')
         return jsonify(response)
     
 
