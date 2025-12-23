@@ -1,6 +1,6 @@
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from prometheus_client import make_wsgi_app, Enum, Gauge
-from anomaly_detector import RealtimeAnomalyDetector
+from anomaly_detector_lightning import RealtimeAnomalyDetector
 from flask import Flask, jsonify, request
 import torch
 import time
@@ -13,26 +13,20 @@ DATA_RATE = 1 #hz
 SAMPLE_EVERY = 1 #seconds
 ENABLE_DATA_SAVING = False
 data_received = 0
-anomaly_count = 0
-ANOMALY_COUNT_TO_TRIGGER_ALERT = 5
 
-MODEL_PATH = 'bilstm_autoencoder.pth'
-THRESHOLD_PATH = 'threshold.npy'
+MODEL_PATH = 'weights/bilstm-autoencoder-epoch=199-val_loss=0.11.ckpt'
 SCALER_PATH = 'scaler.pkl'
 
 FEATURE_NAMES = ['voltage', 'current', 'power', 'energy', 'frequency', 'power_factor']
 LOOKBACK = 10
-ANOMALY_THRESHOLD = 2.5 # None to use the mean based trained threshold
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 anomaly_detector = RealtimeAnomalyDetector(
     model_path=MODEL_PATH,
-    threshold_path=THRESHOLD_PATH,
     scaler_path=SCALER_PATH,
     feature_names=FEATURE_NAMES,
     lookback=LOOKBACK,
-    device=device,
-    error_threshold=ANOMALY_THRESHOLD
+    device=device
 )
 
 if ENABLE_DATA_SAVING:
@@ -42,13 +36,13 @@ else:
     data_saver = None
 
 
-voltage = Gauge('voltage', 'Voltage gauge example')
-current = Gauge('current', 'Current gauge example')
-power = Gauge('power', 'Power gauge example')
-energy = Gauge('energy', 'Energy gauge example')
-frequency = Gauge('frequency', 'Frequency gauge example')
-power_factor = Gauge('power_factor', 'Power Factor gauge example')
-anomaly_status = Enum('is_anomaly', 'Anomaly status', states=['normal', 'anomaly'])
+voltage = Gauge('voltage', 'Voltage gauge')
+current = Gauge('current', 'Current gauge')
+power = Gauge('power', 'Power gauge')
+energy = Gauge('energy', 'Energy gauge')
+frequency = Gauge('frequency', 'Frequency gauge')
+power_factor = Gauge('power_factor', 'Power Factor gauge')
+reconstruction_error = Gauge('reconstruction_error', 'Reconstruction Error gauge from the BiLSTM Autoencoder')
 
 @app.route('/')
 def home():
@@ -101,37 +95,23 @@ def inference():
         )
 
     data_point = np.array([new_voltage, new_current, new_power, new_energy, new_frequency, new_pf])
-    is_anomaly, error, original, reconstructed = anomaly_detector.add_data_point(data_point)
+    error, original, reconstructed = anomaly_detector.add_data_point(data_point)
         
     timestamp = time.time()
-    if is_anomaly is not None:  # Only update after we have enough points
-        global anomaly_count
-        if is_anomaly:
-            anomaly_count += 1
-        else:
-            anomaly_count = 0
-        anomaly_detector.update_history(timestamp, error, is_anomaly, original, reconstructed)
+    if error is not None:  # Only update after we have enough points
+        anomaly_detector.update_history(timestamp, error, original, reconstructed)
         
-        # Print status
-        status = "🔴 ANOMALY" if is_anomaly else "🟢 Normal "
-        print(f"[{timestamp:4f}] {status} | Error: {error:.6f} | Threshold: {anomaly_detector.threshold:.6f}")
+        print(f"[{timestamp:4f}] Error: {error:.6f}")
         response = request_data
-        if anomaly_count >= ANOMALY_COUNT_TO_TRIGGER_ALERT:
-            response["anomaly_prediction"] = 1 if is_anomaly else 0
-            anomaly_status.state('anomaly' if is_anomaly else 'normal')
-        else:
-            response["anomaly_prediction"] = 0
-            anomaly_status.state('normal')
+        response["reconstruction_error"] = error
+        reconstruction_error.set(error)
         return jsonify(response)
     else:
         print(f"[{timestamp:4f}] Buffering... ({len(anomaly_detector.data_buffer)}/{anomaly_detector.lookback})")
         response = request_data
-        response["anomaly_prediction"] = 0
-        anomaly_status.state('normal')
+        response["reconstruction_error"] = 0
+        reconstruction_error.set(0)
         return jsonify(response)
-    
-
-
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
